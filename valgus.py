@@ -32,7 +32,7 @@ DARK = 1
 # Exif
 AUTHOR = "Tauno Erik"
 SOFTWARE = "valgus.py"
-COMMENT = "2021"
+COMMENT = "github.com/taunoe/Valgusmaal"
 
 def main(argv):
   parser = argparse.ArgumentParser()
@@ -61,7 +61,8 @@ def process_folder_input(foldername):
       file_path = foldername + "/" + file.name
       if is_video(file_path):
         print("Opening file: {}".format(file_path))
-        process_video(file_path)
+        process_video(file_path, LIGHT)
+        process_video(file_path, DARK)
   files.close()
 
 
