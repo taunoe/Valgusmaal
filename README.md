@@ -1,10 +1,10 @@
 # Valgusmaal
 
-Creating long exposure images from videos.
+Python3 script to create long exposure images from videos.
 
-Input is a video file. Preferably short a few seconds long.
+Input is a video file or folder with videos. Preferably short video: a few seconds long to get a good result.
 
-The script generates two files: one contains the lightest pixels and the other darkest pixels.
+The script generates two files: one contains the lightest pixels and the other darkest pixels from video.
 
 ## Usage
 

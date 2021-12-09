@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
 
 """
-The input is a video file.
-Two modes.
-Script find the lightest pixels from each frame and merges it all together into one image.
+Python3 script to create long exposure images from videos.
 
-Usage:
+Input is a video file or folder with videos.
+Preferably short video: a few seconds long to get a good result.
 
+The script generates two files: one contains the lightest pixels
+and the other darkest pixels from video.
 
 Author:  Tauno Erik
 Started: 28.11.2021
-Edited:  08.12.2021
-
-TODO:
- - resize images
+Edited:  09.12.2021
 """
 
 # https://towardsdatascience.com/a-simple-guide-to-command-line-arguments-with-argparse-6824c30ab1c3
@@ -30,15 +28,17 @@ import mimetypes
 import exif               # pip3 install exif
 
 # Constants
-EXT = ".jpg"
-LIGHT_EXT = "_light" + EXT
-DARK_EXT = "_dark" + EXT
+EXT = ".jpg"                # Output image extentsion
+LIGHT_EXT = "_light" + EXT  # Light output image suffix
+DARK_EXT = "_dark" + EXT    # Dark output image suffix
 LIGHT = 0
 DARK = 1
-# Exif
+
+# Exif data
 AUTHOR = "Tauno Erik"
 SOFTWARE = "valgus.py"
 COMMENT = "github.com/taunoe/Valgusmaal"
+
 
 def main(argv):
   parser = argparse.ArgumentParser()
@@ -46,7 +46,7 @@ def main(argv):
   # Optional arguments:
   parser.add_argument("-v","--video", type=str, help="Input video file.")
   parser.add_argument("-f","--folder", type=str, help="Input folder.")
-  parser.add_argument("-r","--resize", type=str, help="Resize output images.")
+  parser.add_argument("-r","--resize", type=int, help="Output images size.")
 
   args = parser.parse_args()
 
@@ -54,7 +54,6 @@ def main(argv):
     resize = True
     size = int(args.resize)
   else:
-    # Do not resize
     resize = False
     size = 0
 
@@ -64,10 +63,14 @@ def main(argv):
     process_folder_input(args.folder, resize, size)
   else:
     filename = input("Insert video filename: ")
-    process_file_input(filename, resize, size)
+    process_file_input(filename, resize, size)  # Does not resize
 
 
 def process_folder_input(foldername, resize=False, size=0):
+  '''
+  Searches for video files in a folder.
+  Ignores others.
+  '''
   print("Opening folder: {}".format(foldername))
   path = os.getcwd() + '/' + foldername
   files = os.scandir(path)
@@ -82,8 +85,8 @@ def process_folder_input(foldername, resize=False, size=0):
 
 
 def process_file_input(filename, resize=False, size=0):
-  # Absolute path to input
-  filepath = os.getcwd() + '/' + filename
+  filepath = os.getcwd() + '/' + filename  # Absolute path to input
+
   if os.path.isfile(filepath):
     if is_video(filepath):
       process_video(filename, LIGHT, resize, size)
@@ -95,7 +98,9 @@ def process_file_input(filename, resize=False, size=0):
 
 
 def process_video(video_file, mode = LIGHT, resize=False, size=1024):
-  ''' '''
+  '''
+  mode: LIGHT or DARK
+  '''
   if mode == LIGHT: 
     print("Processing light image...")
     EXT = LIGHT_EXT
@@ -122,38 +127,35 @@ def process_video(video_file, mode = LIGHT, resize=False, size=1024):
     else:
       print("... Done. Saving image.")
       break
-
-  # When everything done, release the capture
   cap.release()
 
-  # Resize image:
   if resize == True:
     downscaled_img = resize_image(image, new_size=size)
     save_image(filepath, downscaled_img, mode)
   else:
-    # Save original size
     save_image(filepath, image, mode)
 
 
 def resize_image(image, new_size=1024):
   '''
-  new_size - is image longer side
+  new_size: image longer side
+  Returns: resized image
   '''
   width = image.shape[1]
   height = image.shape[0]
-  print('Original Dimensions : ', image.shape)
+  print('Original Dimensions: ', image.shape)
 
   new_width, new_height = calculate_new_size(width, height, new_size)
-
   resized = cv.resize(image, (new_width, new_height), interpolation = cv.INTER_AREA)
-  print('Resized Dimensions : ', resized.shape)
+  print('Resized Dimensions: ', resized.shape)
 
   return resized
 
 
 def calculate_new_size(old_width, old_height, new_shorter_side):
     '''
-    Calculates new image size
+    Calculates new image size.
+    Returns: width, height
     '''
     # portrait
     if old_width < old_height: 
@@ -169,7 +171,9 @@ def calculate_new_size(old_width, old_height, new_shorter_side):
 
 
 def save_image(filepath, image, mode):
-  #
+  '''
+  mode: LIGHT==1 or DARK==0
+  '''
   if mode == LIGHT: 
     MODE_EXT = LIGHT_EXT
   elif mode == DARK:
@@ -179,9 +183,6 @@ def save_image(filepath, image, mode):
 
   if EXT == ".jpg" or EXT == ".tiff":
     print("Adding EXIF data.")
-    # Save finalimage with metadata
-    
-  
     # Decode
     status, img_coded = cv.imencode(EXT, image)
     # To byte string
@@ -196,11 +197,14 @@ def save_image(filepath, image, mode):
     # Save final image
     with open(os.path.splitext(filepath)[0] + MODE_EXT, 'wb') as img_file:
       img_file.write(exif_img.get_file())
-  else: # png
+  else: # png, no EXIF data
     cv.imwrite(os.path.splitext(filepath)[0] + MODE_EXT, image)
 
 
 def is_video(file):
+  '''
+  Returns: True or False
+  '''
   if mimetypes.guess_type(file)[0].startswith('video'):
     return True
   return False
