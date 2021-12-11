@@ -19,6 +19,7 @@ Edited:  09.12.2021
 # https://exif.readthedocs.io/en/latest/api_reference.html#image-attributes
 # https://exif.readthedocs.io/en/latest/usage.html#writing-saving-the-image
 # https://www.tutorialkart.com/opencv/python/opencv-python-resize-image/
+# https://geekflare.com/learn-python-subprocess/
 
 
 import cv2 as cv          # pip3 install opencv-python
@@ -26,6 +27,8 @@ import numpy as np
 import argparse, os, sys
 import mimetypes
 import exif               # pip3 install exif
+import timeit
+import threading
 
 # Constants
 EXT = ".jpg"                # Output image extentsion
@@ -76,11 +79,20 @@ def process_folder_input(foldername, resize=False, size=0):
   files = os.scandir(path)
   for file in files:
     if file.is_file:
-      file_path = foldername + "/" + file.name
-      if is_video(file_path):
-        print("Opening file: {}".format(file_path))
-        process_video(file_path, LIGHT, resize, size)
-        process_video(file_path, DARK, resize, size)
+      filepath = foldername + "/" + file.name
+      if is_video(filepath):
+        print("Opening file: {}".format(filepath))
+
+        task1 = process_video(filepath, LIGHT, resize, size)
+        task2 = process_video(filepath, DARK, resize, size)
+
+        t1 = threading.Thread(target=task1, name='t1')
+        t2 = threading.Thread(target=task2, name='t2')
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+
   files.close()
 
 
@@ -89,8 +101,15 @@ def process_file_input(filename, resize=False, size=0):
 
   if os.path.isfile(filepath):
     if is_video(filepath):
-      process_video(filename, LIGHT, resize, size)
-      process_video(filename, DARK, resize, size)
+      task1 = process_video(filepath, LIGHT, resize, size)
+      task2 = process_video(filepath, DARK, resize, size)
+
+      t1 = threading.Thread(target=task1, name='t1')
+      t2 = threading.Thread(target=task2, name='t2')
+      t1.start()
+      t2.start()
+      t1.join()
+      t2.join()
     else:
       print("Not a video.")
   else:
@@ -211,4 +230,9 @@ def is_video(file):
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+  start_time = timeit.default_timer()
+
+  main(sys.argv)
+
+  print("Execution time:")
+  print(timeit.default_timer() - start_time)
