@@ -1,5 +1,7 @@
 # Valgusmaal
 
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/taunoe/Valgusmaal.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/taunoe/Valgusmaal/alerts/)
+
 Python3 script to create long exposure images from videos.
 
 Input is a video file or folder with videos. Preferably short video: a few seconds long to get a good result.
