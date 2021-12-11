@@ -11,7 +11,7 @@ and the other darkest pixels from video.
 
 Author:  Tauno Erik
 Started: 28.11.2021
-Edited:  09.12.2021
+Edited:  11.12.2021
 """
 
 # https://towardsdatascience.com/a-simple-guide-to-command-line-arguments-with-argparse-6824c30ab1c3
@@ -43,132 +43,13 @@ SOFTWARE = "valgus.py"
 COMMENT = "github.com/taunoe/Valgusmaal"
 
 
-def main(argv):
-  parser = argparse.ArgumentParser()
-
-  # Optional arguments:
-  parser.add_argument("-v","--video", type=str, help="Input video file.")
-  parser.add_argument("-f","--folder", type=str, help="Input folder.")
-  parser.add_argument("-r","--resize", type=int, help="Output images size.")
-
-  args = parser.parse_args()
-
-  if args.resize:
-    resize = True
-    size = int(args.resize)
-  else:
-    resize = False
-    size = 0
-
-  if args.video:
-    process_file_input(args.video, resize, size)
-  elif args.folder:
-    process_folder_input(args.folder, resize, size)
-  else:
-    filename = input("Insert video filename: ")
-    process_file_input(filename, resize, size)  # Does not resize
-
-
-def process_folder_input(foldername, resize=False, size=0):
+def is_video(file):
   '''
-  Searches for video files in a folder.
-  Ignores others.
+  Returns: True or False
   '''
-  print("Opening folder: {}".format(foldername))
-  path = os.getcwd() + '/' + foldername
-  files = os.scandir(path)
-  for file in files:
-    if file.is_file:
-      filepath = foldername + "/" + file.name
-      if is_video(filepath):
-        print("Opening file: {}".format(filepath))
-
-        task1 = process_video(filepath, LIGHT, resize, size)
-        task2 = process_video(filepath, DARK, resize, size)
-
-        t1 = threading.Thread(target=task1, name='t1')
-        t2 = threading.Thread(target=task2, name='t2')
-        t1.start()
-        t2.start()
-        t1.join()
-        t2.join()
-
-  files.close()
-
-
-def process_file_input(filename, resize=False, size=0):
-  filepath = os.getcwd() + '/' + filename  # Absolute path to input
-
-  if os.path.isfile(filepath):
-    if is_video(filepath):
-      task1 = process_video(filepath, LIGHT, resize, size)
-      task2 = process_video(filepath, DARK, resize, size)
-
-      t1 = threading.Thread(target=task1, name='t1')
-      t2 = threading.Thread(target=task2, name='t2')
-      t1.start()
-      t2.start()
-      t1.join()
-      t2.join()
-    else:
-      print("Not a video.")
-  else:
-    print("{} - is not a file!".format(filename))
-
-
-def process_video(video_file, mode = LIGHT, resize=False, size=1024):
-  '''
-  mode: LIGHT or DARK
-  '''
-  if mode == LIGHT: 
-    print("Processing light image...")
-    EXT = LIGHT_EXT
-  elif mode == DARK:
-    print("Processing dark image...")
-    EXT = DARK_EXT
-  else:
-    print("Unknown mode ...")
-
-  # Absolute path to video file
-  filepath = os.getcwd() + '/' + video_file
-
-  cap = cv.VideoCapture(video_file)
-  # First frame as base image
-  ret, image = cap.read()
-
-  while (cap.isOpened()):
-    ret, frame = cap.read()
-    if ret:
-      if mode == LIGHT: 
-        image = np.maximum(frame, image)
-      elif mode == DARK:
-        image = np.minimum(frame, image)
-    else:
-      print("... Done. Saving image.")
-      break
-  cap.release()
-
-  if resize == True:
-    downscaled_img = resize_image(image, new_size=size)
-    save_image(filepath, downscaled_img, mode)
-  else:
-    save_image(filepath, image, mode)
-
-
-def resize_image(image, new_size=1024):
-  '''
-  new_size: image longer side
-  Returns: resized image
-  '''
-  width = image.shape[1]
-  height = image.shape[0]
-  print('Original Dimensions: ', image.shape)
-
-  new_width, new_height = calculate_new_size(width, height, new_size)
-  resized = cv.resize(image, (new_width, new_height), interpolation = cv.INTER_AREA)
-  print('Resized Dimensions: ', resized.shape)
-
-  return resized
+  if mimetypes.guess_type(file)[0].startswith('video'):
+    return True
+  return False
 
 
 def calculate_new_size(old_width, old_height, new_shorter_side):
@@ -189,7 +70,24 @@ def calculate_new_size(old_width, old_height, new_shorter_side):
         return(new_shorter_side, new_shorter_side)
 
 
+def resize_image(image, new_size=1024):
+  '''
+  new_size: image longer side
+  Returns: resized image
+  '''
+  width = image.shape[1]
+  height = image.shape[0]
+  print('Original Dimensions: ', image.shape)
+
+  new_width, new_height = calculate_new_size(width, height, new_size)
+  resized = cv.resize(image, (new_width, new_height), interpolation = cv.INTER_AREA)
+  print('Resized Dimensions: ', resized.shape)
+
+  return resized
+
+
 def save_image(filepath, image, mode):
+  print("save_image ####### " + filepath)
   '''
   mode: LIGHT==1 or DARK==0
   '''
@@ -220,13 +118,122 @@ def save_image(filepath, image, mode):
     cv.imwrite(os.path.splitext(filepath)[0] + MODE_EXT, image)
 
 
-def is_video(file):
+def process_video(video_file, mode = LIGHT, resize=False, size=1024):
   '''
-  Returns: True or False
+  mode: LIGHT or DARK
   '''
-  if mimetypes.guess_type(file)[0].startswith('video'):
-    return True
-  return False
+  if mode == LIGHT: 
+    print("Processing light image...")
+    EXT = LIGHT_EXT
+  elif mode == DARK:
+    print("Processing dark image...")
+    EXT = DARK_EXT
+  else:
+    print("Unknown mode ...")
+
+  # Absolute path to video file
+  filepath = os.getcwd() + '/' + video_file
+  print("process_video ####### " + filepath)
+
+  cap = cv.VideoCapture(video_file)
+  # First frame as base image
+  ret, image = cap.read()
+
+  while (cap.isOpened()):
+    ret, frame = cap.read()
+    if ret:
+      if mode == LIGHT: 
+        image = np.maximum(frame, image)
+      elif mode == DARK:
+        image = np.minimum(frame, image)
+    else:
+      print("... Done. Saving image.")
+      break
+  cap.release()
+
+  if resize == True:
+    downscaled_img = resize_image(image, new_size=size)
+    save_image(filepath, downscaled_img, mode)
+  else:
+    save_image(filepath, image, mode)
+
+
+def process_file_input(filename, resize=False, size=0):
+  filepath = os.getcwd() + '/' + filename  # Absolute path to input
+
+  if os.path.isfile(filepath):
+    if is_video(filepath):
+      threads = []
+      i = 0
+      for mode in range(2):
+        task = process_video(filename, mode, resize, size)
+        threads.append(threading.Thread(target=task, name=str(i)))
+        i += 1
+      for th in threads:
+        th.start()
+      for th in threads:
+        th.join()
+    else:
+      print("Not a video.")
+  else:
+    print("{} - is not a file!".format(filename))
+
+
+def process_folder_input(foldername, resize=False, size=0):
+  '''
+  Searches for video files in a folder.
+  Ignores others.
+  '''
+  print("Opening folder: {}".format(foldername))
+  path = os.getcwd() + '/' + foldername
+  files = os.scandir(path)
+
+  threads = []
+  i = 0
+
+  for file in files:
+    if file.is_file:
+      filepath = foldername + "/" + file.name
+      if is_video(filepath):
+        print("Opening file: {}".format(filepath))
+
+        for mode in range(2):
+          task = process_video(filepath, mode, resize, size)
+          threads.append(threading.Thread(target=task, name=str(i)))
+          i += 1
+  
+  for th in threads:
+    th.start()
+  for th in threads:
+    th.join()
+
+  files.close()
+
+
+def main(argv):
+  parser = argparse.ArgumentParser()
+
+  # Optional arguments:
+  parser.add_argument("-v","--video", type=str, help="Input video file.")
+  parser.add_argument("-f","--folder", type=str, help="Input folder.")
+  parser.add_argument("-r","--resize", type=int, help="Output images size.")
+
+  args = parser.parse_args()
+
+  if args.resize:
+    resize = True
+    size = int(args.resize)
+  else:
+    resize = False
+    size = 0
+
+  if args.video:
+    process_file_input(args.video, resize, size)
+  elif args.folder:
+    process_folder_input(args.folder, resize, size)
+  else:
+    filename = input("Insert video filename: ")
+    process_file_input(filename, resize, size)  # Does not resize
 
 
 if __name__ == "__main__":
