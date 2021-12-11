@@ -38,4 +38,4 @@ Using folder as input and resizing all output images:
 ![Example](img/dark.png)
  ___
 
-Copyright 2021 Tauno Erik https://taunoerik.art
+Tauno Erik https://taunoerik.art Copyright 2021
