@@ -57,15 +57,15 @@ def calculate_new_size(old_width, old_height, new_shorter_side):
     Calculates new image size.
     Returns: width, height
     '''
-    # portrait
+    # Portrait
     if old_width < old_height: 
         new_height = int((((new_shorter_side * 100) / old_width) / 100) * old_height)
         return(new_shorter_side, new_height)
-    # landscape 
+    # Landscape 
     elif old_height < old_width: 
         new_width = int((((new_shorter_side * 100) / old_height) / 100) * old_width)
         return(new_width, new_shorter_side)
-    # square
+    # Square
     else:
         return(new_shorter_side, new_shorter_side)
 
