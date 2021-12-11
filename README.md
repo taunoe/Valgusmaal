@@ -1,6 +1,7 @@
 # Valgusmaal
 
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/taunoe/Valgusmaal.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/taunoe/Valgusmaal/alerts/)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/taunoe/Valgusmaal.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/taunoe/Valgusmaal/context:python)
 
 Python3 script to create long exposure images from videos.
 
