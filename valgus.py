@@ -87,7 +87,6 @@ def resize_image(image, new_size=1024):
 
 
 def save_image(filepath, image, mode):
-  print("save_image ####### " + filepath)
   '''
   mode: LIGHT==1 or DARK==0
   '''
@@ -124,16 +123,13 @@ def process_video(video_file, mode = LIGHT, resize=False, size=1024):
   '''
   if mode == LIGHT: 
     print("Processing light image...")
-    EXT = LIGHT_EXT
   elif mode == DARK:
     print("Processing dark image...")
-    EXT = DARK_EXT
   else:
     print("Unknown mode ...")
 
   # Absolute path to video file
   filepath = os.getcwd() + '/' + video_file
-  print("process_video ####### " + filepath)
 
   cap = cv.VideoCapture(video_file)
   # First frame as base image
@@ -163,14 +159,13 @@ def process_file_input(filename, resize=False, size=0):
 
   if os.path.isfile(filepath):
     if is_video(filepath):
-      threads = []
-      i = 0
+      threads = list()
+
       for mode in range(2):
-        task = process_video(filename, mode, resize, size)
-        threads.append(threading.Thread(target=task, name=str(i)))
-        i += 1
-      for th in threads:
-        th.start()
+        x = threading.Thread(target=process_video(filepath, mode, resize, size), args=(mode,))
+        threads.append(x)
+        x.start()
+
       for th in threads:
         th.join()
     else:
@@ -188,8 +183,7 @@ def process_folder_input(foldername, resize=False, size=0):
   path = os.getcwd() + '/' + foldername
   files = os.scandir(path)
 
-  threads = []
-  i = 0
+  threads = list()
 
   for file in files:
     if file.is_file:
@@ -198,12 +192,10 @@ def process_folder_input(foldername, resize=False, size=0):
         print("Opening file: {}".format(filepath))
 
         for mode in range(2):
-          task = process_video(filepath, mode, resize, size)
-          threads.append(threading.Thread(target=task, name=str(i)))
-          i += 1
-  
-  for th in threads:
-    th.start()
+          x = threading.Thread(target=process_video(filepath, mode, resize, size), args=(mode,))
+          threads.append(x)
+          x.start()
+
   for th in threads:
     th.join()
 
