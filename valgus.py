@@ -153,6 +153,8 @@ def process_video(video_file, mode = LIGHT, resize=False, size=1024):
   else:
     save_image(filepath, image, mode)
 
+  return 0
+
 
 def process_file_input(filename, resize=False, size=0):
   filepath = os.getcwd() + '/' + filename  # Absolute path to input
