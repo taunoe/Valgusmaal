@@ -121,10 +121,7 @@ def save_image(filepath, image, mode):
     cv.imwrite(os.path.splitext(filepath)[0] + MODE_EXT, image)
 
 
-def process_video(video_file, mode = LIGHT, resize=False, size=1024):
-  '''
-  mode: LIGHT or DARK
-  '''
+def print_process_txt(mode):
   if mode == LIGHT: 
     print("Processing light image...")
   elif mode == DARK:
@@ -132,12 +129,20 @@ def process_video(video_file, mode = LIGHT, resize=False, size=1024):
   else:
     print("Unknown mode ...")
 
-  # Absolute path to video file
-  filepath = os.getcwd() + '/' + video_file
+
+def process_video(video_file, mode = LIGHT, resize=False, size=1024):
+  '''
+  mode: LIGHT or DARK
+  '''
+  print_process_txt(mode)
+
+  filepath = os.getcwd() + '/' + video_file  # Absolute path to video file
 
   cap = cv.VideoCapture(video_file)
-  # First frame as base image
-  ret, image = cap.read()
+  ret, image = cap.read()                    # First frame as base image
+
+  frames_count = cap.get(cv.CAP_PROP_FRAME_COUNT)
+  print("Number of frames: {}".format(frames_count))
 
   while (cap.isOpened()):
     ret, frame = cap.read()
