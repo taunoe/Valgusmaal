@@ -11,7 +11,7 @@ and the other darkest pixels from video.
 
 Author:  Tauno Erik
 Started: 28.11.2021
-Edited:  11.12.2021
+Edited:  12.12.2021
 """
 
 # https://towardsdatascience.com/a-simple-guide-to-command-line-arguments-with-argparse-6824c30ab1c3
@@ -31,9 +31,7 @@ import timeit
 import threading
 
 # Constants
-EXT = ".jpg"                # Output image extentsion
-LIGHT_EXT = "_light" + EXT  # Light output image suffix
-DARK_EXT = "_dark" + EXT    # Dark output image suffix
+EXT = ".jpg"              # Output image extentsion (jpg, png)
 LIGHT = 0
 DARK = 1
 
@@ -86,16 +84,22 @@ def resize_image(image, new_size=1024):
   return resized
 
 
+def get_ext(mode):
+  MODE_EXT = '.jpg'
+  if mode == LIGHT: # == 0
+    MODE_EXT = "_light" + EXT  # Light output image suffix
+  elif mode == DARK: # == 1
+    MODE_EXT = "_dark" + EXT    # Dark output image suffix
+  else:
+    print("Unknown mode: {}".format(mode))
+  return MODE_EXT
+
+
 def save_image(filepath, image, mode):
   '''
   mode: LIGHT==1 or DARK==0
   '''
-  if mode == LIGHT: 
-    MODE_EXT = LIGHT_EXT
-  elif mode == DARK:
-    MODE_EXT = DARK_EXT
-  else:
-    print("Unknown mode: {}".format(mode))
+  MODE_EXT = get_ext(mode)
 
   if EXT == ".jpg" or EXT == ".tiff":
     print("Adding EXIF data.")
@@ -117,10 +121,7 @@ def save_image(filepath, image, mode):
     cv.imwrite(os.path.splitext(filepath)[0] + MODE_EXT, image)
 
 
-def process_video(video_file, mode = LIGHT, resize=False, size=1024):
-  '''
-  mode: LIGHT or DARK
-  '''
+def print_process_txt(mode):
   if mode == LIGHT: 
     print("Processing light image...")
   elif mode == DARK:
@@ -128,12 +129,20 @@ def process_video(video_file, mode = LIGHT, resize=False, size=1024):
   else:
     print("Unknown mode ...")
 
-  # Absolute path to video file
-  filepath = os.getcwd() + '/' + video_file
+
+def process_video(video_file, mode = LIGHT, resize=False, size=1024):
+  '''
+  mode: LIGHT or DARK
+  '''
+  print_process_txt(mode)
+
+  filepath = os.getcwd() + '/' + video_file  # Absolute path to video file
 
   cap = cv.VideoCapture(video_file)
-  # First frame as base image
-  ret, image = cap.read()
+  ret, image = cap.read()                    # First frame as base image
+
+  frames_count = cap.get(cv.CAP_PROP_FRAME_COUNT)
+  print("Number of frames: {}".format(frames_count))
 
   while (cap.isOpened()):
     ret, frame = cap.read()
@@ -171,7 +180,7 @@ def process_file_input(filename, resize=False, size=0):
       for th in threads:
         th.join()
     else:
-      print("Not a video.")
+      print("Not a video!")
   else:
     print("{} - is not a file!".format(filename))
 
