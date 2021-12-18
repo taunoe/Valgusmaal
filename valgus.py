@@ -173,7 +173,7 @@ def process_file_input(filename, resize=False, size=0):
       threads = list()
 
       for mode in range(2):
-        x = threading.Thread(target=process_video(filepath, mode, resize, size), args=(mode,))
+        x = threading.Thread(target=process_video(filename, mode, resize, size), args=(mode,))
         threads.append(x)
         x.start()
 
